@@ -9,8 +9,6 @@ import os
 import time
 
 # 校验Cookie是否有效
-
-
 def getUserId(cookie):
     headers = {
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063',
@@ -73,8 +71,6 @@ def downloadImages(saveDir, illustId, cookie):
         downloadImages(saveDir, illustId, cookie)
 
 # 下载收藏夹所有图片
-
-
 def downloadFavorites(cookie, userId, saveDir, isHide):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063',
