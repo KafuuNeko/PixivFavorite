@@ -2,7 +2,6 @@
 # 作者：KafuuNeko
 # https://kafuu.cc/
 
-from asyncio.windows_events import NULL
 import sys
 import requests
 import json
@@ -49,27 +48,33 @@ def downloadImages(saveDir, illustId, cookie):
         for value in data['body']:
             # original 原图
             # regular 标准
-            print('Downloading: ' + os.path.basename(value['urls']['regular']))
+            print('Downloading: ' +
+                  os.path.basename(value['urls']['original']))
 
             saveFile = saveDir + '/' + \
-                os.path.basename(value['urls']['regular'])
+                os.path.basename(value['urls']['original'])
 
             if os.path.exists(saveFile) == False:
                 imgres = requests.get(
-                    value['urls']['original'], headers=headers, timeout=60, verify=False)
-                with open(saveFile, "wb") as f:
+                    value['urls']['original'], headers=headers, timeout=None, verify=False)
+
+                with open(saveFile + '.temp', "wb") as f:
                     f.write(imgres.content)
+
+                os.rename(saveFile + '.temp', saveFile)
             else:
                 print('[' + str(saveFile) + ']文件已存在')
 
     except Exception as ex:
         print(str(ex))
-        print('下载图片失败, 正在重试。illustId = ' + str(illustId))
+        print('下载图片失败, 将在5秒后重试. illustId = ' + str(illustId))
+
         time.sleep(5)
         downloadImages(saveDir, illustId, cookie)
 
-
 # 下载收藏夹所有图片
+
+
 def downloadFavorites(cookie, userId, saveDir, isHide):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063',
@@ -82,8 +87,6 @@ def downloadFavorites(cookie, userId, saveDir, isHide):
     inc = 50
     total = inc
 
-    requests.adapters.DEFAULT_RETRIES = 5
-
     while (offset < total):
         try:
             rest = 'show'
@@ -93,8 +96,6 @@ def downloadFavorites(cookie, userId, saveDir, isHide):
                 str(offset) + '&limit=' + str(inc) + \
                 '&rest=' + rest + '&lang=zh'
 
-            print(url)
-
             response = requests.get(
                 url, headers=headers, timeout=15, verify=False)
             response.encoding = 'utf-8'
@@ -102,7 +103,7 @@ def downloadFavorites(cookie, userId, saveDir, isHide):
 
         except Exception as ex:
             print(str(ex))
-            print('访问收藏信息失败，正在重试')
+            print('访问收藏信息失败, 正在重试')
             time.sleep(5)
             continue
 
@@ -122,6 +123,9 @@ def downloadFavorites(cookie, userId, saveDir, isHide):
 
 
 if __name__ == "__main__":
+    requests.adapters.DEFAULT_RETRIES = 5
+    requests.packages.urllib3.disable_warnings()
+
     if not os.path.exists('cookie.txt'):
         print('请将您的pixiv账户cookie保存到当前目录下的cookie.txt文件夹')
         sys.exit()
@@ -133,7 +137,9 @@ if __name__ == "__main__":
         print('获取用户ID失败, 检查cookie是否有效')
         sys.exit()
 
-    print('user_id: ' + userId[1])
+    userId = userId[1]
+
+    print('user_id: ' + userId)
 
     # 爬取公开收藏夹
     saveDir = 'images/' + str(userId) + '/public'
@@ -146,3 +152,5 @@ if __name__ == "__main__":
     if not os.path.exists(saveDir):
         os.makedirs(saveDir)
     downloadFavorites(cookie, userId, saveDir, True)
+
+    print("程序完成")
